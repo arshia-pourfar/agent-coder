@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+/* =========================
+   CODING AGENT COLOR SYSTEM
+   ========================= */
+
+:root {
+  /* Base backgrounds */
+  --bg: #0b0f17;
+  --bg-soft: #111827;
+  --bg-elevated: #1f2937;
+
+  /* Text */
+  --text: #e5e7eb;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
+
+  /* Primary (AI / Actions) */
+  --primary: #6366f1;
+  /* indigo */
+  --primary-hover: #4f46e5;
+
+  /* Accent (Agent intelligence / highlights) */
+  --accent: #22c55e;
+  /* green */
+  --accent-soft: #16a34a;
+
+  /* Warning / thinking / reasoning */
+  --warning: #f59e0b;
+
+  /* Error */
+  --danger: #ef4444;
+
+  /* Border / separators */
+  --border: rgba(255, 255, 255, 0.08);
+
+  /* Glass effect */
+  --glass: rgba(255, 255, 255, 0.05);
+}
+
+/* Dark base */
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* =========================
+   UTILITY EXTENSIONS (Tailwind v4 style)
+   ========================= */
+
+@layer utilities {
+  .bg-app {
+    background-color: var(--bg);
+  }
+
+  .bg-panel {
+    background-color: var(--bg-soft);
+    border: 1px solid var(--border);
+  }
+
+  .bg-elevated {
+    background-color: var(--bg-elevated);
+  }
+
+  .text-muted {
+    color: var(--text-muted);
+  }
+
+  .text-dim {
+    color: var(--text-dim);
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    transition: 0.2s;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-hover);
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    color: black;
+  }
+
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+  }
+
+  .border-app {
+    border-color: var(--border);
+  }
+
+  .input {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    color: var(--text);
+    outline: none;
+  }
+
+  .input:focus {
+    border-color: var(--primary);
+  }
+}
