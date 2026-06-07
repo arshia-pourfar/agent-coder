@@ -1,0 +1,23 @@
+{
+    "name": "coding-agent",
+    "version": "0.1.0",
+    "private": true,
+    "workspaces": [
+        "frontend",
+        "backend"
+    ],
+    "scripts": {
+        "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
+        "dev:frontend": "npm run dev --prefix frontend",
+        "dev:backend": "npm run dev --prefix backend",
+        "build": "npm run build --prefix frontend",
+        "start": "npm run start --prefix frontend"
+    },
+    "devDependencies": {
+        "concurrently": "^9.0.0",
+        "typescript": "^5.2.2"
+    },
+    "dependencies": {
+        "dotenv": "^17.4.2"
+    }
+}
