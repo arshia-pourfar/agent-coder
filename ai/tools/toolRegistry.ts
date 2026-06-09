@@ -1,19 +1,23 @@
 import { Tool } from "./tool.interface";
+import { ToolName } from "./schema";
 
 export class ToolRegistry {
-    private tools = new Map<string, Tool>();
+    private tools = new Map<
+        ToolName,
+        Tool
+    >();
 
     register(tool: Tool) {
         this.tools.set(tool.name, tool);
     }
 
-    get(name: string): Tool {
-        const tool = this.tools.get(name);
+    get(
+        name: ToolName
+    ): Tool | undefined {
+        return this.tools.get(name);
+    }
 
-        if (!tool) {
-            throw new Error(`Tool not found: ${name}`);
-        }
-
-        return tool;
+    list() {
+        return [...this.tools.values()];
     }
 }

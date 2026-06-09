@@ -1,15 +1,18 @@
+import type { AgentMemoryItem } from "../agentEngine";
+
 export class MemoryStore {
-    private memory: any[] = [];
 
-    add(entry: any) {
-        this.memory.push(entry);
+    private items: AgentMemoryItem[] = [];
+
+    add(item: AgentMemoryItem) {
+        this.items.push(item);
     }
 
-    getAll() {
-        return this.memory;
+    getAll(): AgentMemoryItem[] {
+        return this.items;
     }
 
-    getRecent(n = 5) {
-        return this.memory.slice(-n);
+    getLast(count: number): AgentMemoryItem[] {
+        return this.items.slice(-count);
     }
 }

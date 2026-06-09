@@ -1,80 +1,82 @@
-import { ToolName } from "./schema";
 
-export interface ToolDefinition {
-    name: ToolName;
-
-    description: string;
-
-    parameters: {
-        name: string;
-        type: string;
-        required: boolean;
-    }[];
-}
-
-export const TOOL_DEFINITIONS: ToolDefinition[] = [
+export const TOOL_DEFINITIONS = [
     {
         name: "readFile",
         description: "Read file content",
-        parameters: [
-            {
-                name: "path",
-                type: "string",
-                required: true
-            }
-        ]
+        parameters: {
+            path: "string"
+        }
     },
 
     {
         name: "writeFile",
         description: "Create or overwrite a file",
-        parameters: [
-            {
-                name: "path",
-                type: "string",
-                required: true
-            },
-            {
-                name: "content",
-                type: "string",
-                required: true
-            }
-        ]
+        parameters: {
+            path: "string",
+            content: "string"
+        }
     },
 
     {
         name: "searchFiles",
-        description: "Search files by keyword",
-        parameters: [
-            {
-                name: "query",
-                type: "string",
-                required: true
-            }
-        ]
+        description: "Search project files",
+        parameters: {
+            query: "string"
+        }
     },
 
     {
         name: "listFiles",
         description: "List directory files",
-        parameters: [
-            {
-                name: "path",
-                type: "string",
-                required: true
-            }
-        ]
+        parameters: {
+            path: "string"
+        }
     },
 
     {
         name: "runTerminal",
         description: "Execute terminal command",
-        parameters: [
-            {
-                name: "command",
-                type: "string",
-                required: true
-            }
-        ]
+        parameters: {
+            command: "string"
+        }
+    },
+
+    {
+        name: "createDirectory",
+        description: "Create directory",
+        parameters: {
+            path: "string"
+        }
+    },
+
+    {
+        name: "deleteFile",
+        description: "Delete file",
+        parameters: {
+            path: "string"
+        }
+    },
+
+    {
+        name: "renameFile",
+        description: "Rename file",
+        parameters: {
+            oldPath: "string",
+            newPath: "string"
+        }
+    },
+
+    {
+        name: "gitDiff",
+        description: "Show git diff",
+        parameters: {}
+    },
+
+    {
+        name: "gitCommit",
+        description: "Commit git changes",
+        parameters: {
+            message: "string"
+        }
     }
 ];
