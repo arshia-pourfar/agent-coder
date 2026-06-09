@@ -38,7 +38,6 @@ export class AgentEngine {
     public state: AgentState = "idle";
 
     private memory = new MemoryStore();
-
     private tools = new ToolRegistry();
 
     private llm = LLMRouter.get(
@@ -57,6 +56,9 @@ export class AgentEngine {
         this.tools.register(new ListFilesTool());
     }
 
+    // -----------------------------
+    // TOOL EXECUTION
+    // -----------------------------
     private async callTool(
         action: Extract<AgentAction, { type: "tool" }>
     ): Promise<string> {
@@ -64,14 +66,10 @@ export class AgentEngine {
         const tool = this.tools.get(action.tool);
 
         if (!tool) {
-            throw new Error(
-                `Tool not found: ${action.tool}`
-            );
+            throw new Error(`Tool not found: ${action.tool}`);
         }
 
-        const output = await tool.execute(
-            action.parameters
-        );
+        const output = await tool.execute(action.parameters);
 
         this.memory.add({
             input: action.tool,
@@ -81,51 +79,35 @@ export class AgentEngine {
 
         return output;
     }
-    private getMemoryContext(): string {
 
+    // -----------------------------
+    // MEMORY CONTEXT
+    // -----------------------------
+    private getMemoryContext(): string {
         const last = this.memory.getLast(5);
 
         return last
-            .map((m: AgentMemoryItem) =>
-                `Tool: ${m.tool}\nResult: ${m.output}`
-            )
+            .map(m => `Tool: ${m.tool}\nResult: ${m.output}`)
             .join("\n---\n");
     }
+
+    // -----------------------------
+    // PROMPT
+    // -----------------------------
     private buildPrompt(userInput: string): string {
         return `
-You are an expert AI software engineering agent.
+You are a STRICT JSON coding agent.
 
-Your job:
-- Solve tasks step-by-step
-- Prefer practical solutions over explanations
-- Avoid unnecessary tool usage
-- Stop when task is clearly complete
-
-QUALITY RULES:
-- Be concise but intelligent
-- Prefer correct engineering decisions
-- Do NOT call tools if not needed
-- Avoid loops unless necessary
-- If enough information is available, return final answer
-
-SAFETY RULES:
-- Never use absolute paths
-- Only use workspace-relative paths
-
-Allowed:
-ai/test.py
-frontend/app/page.tsx
-backend/src/server.ts
+RULES:
+- Output ONLY JSON (no text, no markdown)
+- You are NOT allowed to explain anything
+- You are NOT allowed to output code outside JSON
+- You must either CALL A TOOL or RETURN FINAL RESULT
 
 TOOLS:
+readFile, writeFile, searchFiles, listFiles, runTerminal
 
-readFile(path)
-writeFile(path, content)
-searchFiles(query)
-listFiles(path)
-runTerminal(command)
-
-OUTPUT FORMAT (STRICT JSON ONLY):
+FORMAT:
 
 Tool call:
 {
@@ -143,17 +125,31 @@ Final:
   "output": "Done"
 }
 
-RECENT MEMORY:
+Memory:
 ${this.getMemoryContext()}
 
-USER REQUEST:
+User:
 ${userInput}
 `.trim();
     }
 
-    private async llmStep(
-        prompt: string
-    ): Promise<AgentAction> {
+    // -----------------------------
+    // JSON EXTRACTION (IMPORTANT FIX)
+    // -----------------------------
+    private extractJSON(text: string): AgentAction {
+        const match = text.match(/\{[\s\S]*\}/);
+
+        if (!match) {
+            throw new Error("No JSON found in LLM output");
+        }
+
+        return JSON.parse(match[0]);
+    }
+
+    // -----------------------------
+    // LLM STEP (WITH RETRY)
+    // -----------------------------
+    private async llmStep(prompt: string, retry = 0): Promise<AgentAction> {
 
         const response = await this.llm.chat([
             {
@@ -168,98 +164,72 @@ ${userInput}
 
         let cleaned = response.trim();
 
-        cleaned = cleaned
-            .replace(/^```json/i, "")
-            .replace(/^```/i, "")
-            .replace(/```$/i, "")
-            .trim();
-
         try {
-            return JSON.parse(cleaned) as AgentAction;
-        } catch {
-            throw new Error(
-                `Invalid LLM JSON output: ${response}`
-            );
+            return this.extractJSON(cleaned);
+        } catch (err) {
+
+            if (retry < 1) {
+                return this.llmStep(
+                    "Return ONLY valid JSON. No text. Fix this:\n" + response,
+                    retry + 1
+                );
+            }
+
+            throw new Error(`Invalid LLM output: ${response}`);
         }
     }
 
-    public async handlePrompt(
-        prompt: string
-    ): Promise<string> {
+    // -----------------------------
+    // MAIN LOOP
+    // -----------------------------
+    public async handlePrompt(prompt: string): Promise<string> {
 
         this.state = "planning";
 
         let context = prompt;
-
         let finalResult = "";
 
         for (let step = 0; step < 5; step++) {
 
             try {
-
-                const action =
-                    await this.llmStep(context);
+                const action = await this.llmStep(context);
 
                 if (action.type === "final") {
-
-                    finalResult = action.output;
-
                     this.state = "idle";
-
-                    return finalResult;
+                    return action.output;
                 }
 
                 this.state = "executing";
 
-                const result =
-                    await this.callTool(action);
+                const result = await this.callTool(action);
 
                 this.state = "observing";
-
-                this.memory.add({
-                    input: prompt,
-                    output: result,
-                    tool: action.tool
-                });
 
                 finalResult = result;
 
                 context = `
-Tool executed:
-
-${action.tool}
+Tool executed: ${action.tool}
 
 Result:
-
 ${result}
 
-Original request:
-
-${prompt}
-
-If the task is complete return:
-
-{
-  "type": "final",
-  "output": "..."
-}
-
-Otherwise call another tool.
-`.trim();
+If task is complete return FINAL JSON.
+Otherwise continue.
+                `.trim();
 
             } catch (err: any) {
 
                 this.state = "error";
-
                 return `Error: ${err.message}`;
             }
         }
 
         this.state = "idle";
-
         return finalResult;
     }
 }
+
+
 
 // import { ToolRegistry } from "./tools/toolRegistry";
 // import { LLMRouter } from "./providers/router";
