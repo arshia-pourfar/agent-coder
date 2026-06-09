@@ -1,4 +1,11 @@
+import { ToolName } from "./schema";
+
 export interface Tool {
-    name: string;
-    execute(...args: any[]): Promise<string>;
+    name: ToolName;
+
+    description: string;
+
+    execute(
+        parameters: Record<string, unknown>
+    ): Promise<string>;
 }

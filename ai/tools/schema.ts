@@ -2,12 +2,17 @@ export type ToolName =
     | "readFile"
     | "writeFile"
     | "searchFiles"
+    | "listFiles"
     | "runTerminal"
-    | "listFiles";
+    | "createDirectory"
+    | "deleteFile"
+    | "renameFile"
+    | "gitDiff"
+    | "gitCommit";
 
 export interface ToolCall {
     tool: ToolName;
-    args: any[];
+    parameters: Record<string, unknown>;
 }
 
 export interface ToolResult {
